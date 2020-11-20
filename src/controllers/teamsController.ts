@@ -1,51 +1,27 @@
 import { Request, Response } from 'express';
 import knex from '../database/connection';
-import crypto from 'crypto';
 
-class usersController {
+class teamsController {
 
     async index(req: Request, res: Response) {
-        const users = await knex('md_users').select('*');
+        const games = await knex('md_teams').join('md_users', 'md_teams.id', '=', 'md_users.id').select('md_teams.id','md_users.name','md_teams.group').orderBy('group');
 
-        if (!users) {
+        if (!games) {
             return res.status(400).json({ message: "Users not found" });
         }
 
-        return res.json(users);
+        return res.json(games);
     }
 
     async show(req: Request, res: Response) {
         const { id } = req.params;
-        const users = await knex('md_users').where('id', id).first();
+        const games = await knex('md_teams').join('md_users', 'md_teams.id', '=', 'md_users.id').select('md_teams.id','md_users.name','md_teams.group').where('group',id);
 
-        if (!users) {
+        if (!games) {
             return res.status(400).json({ message: "User not found" });
         }
 
-        return res.json(users);
-    }
-
-    async create(req: Request, res: Response) {
-
-        const {
-            name,
-            image
-        } = req.body;
-        
-        const trx = await knex.transaction();
-
-        const users = {
-            name,
-            image:''
-        };
-
-        const insertedIds = await trx('md_users').insert(users);
-
-        await trx.commit();
-
-        return res.json({
-            ...users
-        });
+        return res.json(games);
     }
 
     async update(req: Request, res: Response) {
@@ -54,7 +30,7 @@ class usersController {
         
         const trx = await knex.transaction();
 
-        const user = await knex('md_users').where('id', id).update(data);
+        const user = await knex('md_teams').where('id', id).update(data);
 
         await trx.commit();
 
@@ -69,9 +45,9 @@ class usersController {
         const { id } = req.params;
 
         const trx = await knex.transaction();
-
-        const user = await knex('md_users').where('id', id).delete();
-
+        
+        const user = await knex('md_teams').where('group', id).delete();
+        
         await trx.commit();
 
         if (!user) {
@@ -83,5 +59,4 @@ class usersController {
 
   
 }
-
-export default usersController;
+export default teamsController;
